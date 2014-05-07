@@ -200,37 +200,6 @@ public class WsdlProject extends AbstractTestPropertyHolderWsdlModelItem<Project
         this(path, workspace, true, null, null);
     }
 
-    public WsdlProject(InputStream inputStream, WorkspaceImpl workspace) {
-        super(null, workspace, ICON_NAME);
-
-        this.workspace = workspace;
-        this.open = true;
-        this.endpointSupport = new EndpointSupport();
-
-        addProjectListeners();
-
-        loadProject(inputStream);
-        if (projectDocument == null) {
-            throw new IllegalArgumentException(COULD_NOT_LOAD_PROJECT_ERROR_MESSAGE);
-        }
-
-        lastModified = System.currentTimeMillis();
-
-        initProjectIcons();
-
-
-        if (getConfig() != null) {
-            endpointStrategy.init(this);
-        }
-        if (getConfig() != null && this.environment == null) {
-            setActiveEnvironment(DefaultEnvironment.getInstance());
-        }
-
-        this.open = true;
-
-        addPropertyChangeListener(this);
-    }
-
     public WsdlProject(String path, WorkspaceImpl workspace, boolean open, String tempName,
                        String projectPassword) {
         super(null, workspace, ICON_NAME);
@@ -274,24 +243,43 @@ public class WsdlProject extends AbstractTestPropertyHolderWsdlModelItem<Project
         } finally {
             initProjectIcons();
 
-            this.open = open && !disabled && (this.encryptionStatus != ENCRYPTED_BAD_OR_NO_PASSWORD);
 
             if (projectDocument == null) {
                 throw new IllegalArgumentException(COULD_NOT_LOAD_PROJECT_ERROR_MESSAGE);
             }
 
-            if (getConfig() != null) {
-                endpointStrategy.init(this);
-            }
             if (getSettings() != null) {
                 setProjectRoot(path);
             }
-            if (getConfig() != null && this.environment == null) {
-                setActiveEnvironment(DefaultEnvironment.getInstance());
-            }
 
-            addPropertyChangeListener(this);
+            finalizeProjectLoading(open);
         }
+    }
+
+    /*
+        This is used for loading a project without setting its path,
+        which will require the user to select where to save the file upon saving.
+    */
+    public WsdlProject(InputStream inputStream, WorkspaceImpl workspace) {
+        super(null, workspace, ICON_NAME);
+
+        this.workspace = workspace;
+        this.open = true;
+        this.endpointSupport = new EndpointSupport();
+        this.projectPassword = null;
+
+        addProjectListeners();
+
+        loadProject(inputStream);
+        if (projectDocument == null) {
+            throw new IllegalArgumentException(COULD_NOT_LOAD_PROJECT_ERROR_MESSAGE);
+        }
+
+        lastModified = System.currentTimeMillis();
+
+        initProjectIcons();
+
+        finalizeProjectLoading(open);
     }
 
     public boolean isRemote() {
@@ -570,6 +558,19 @@ public class WsdlProject extends AbstractTestPropertyHolderWsdlModelItem<Project
         disabledIcon = UISupport.createImageIcon("/disabledProject.gif");
         openEncyptedIcon = UISupport.createImageIcon("/openEncryptedProject.gif");
         closedEncyptedIcon = UISupport.createImageIcon("/closedEncryptedProject.gif");
+    }
+
+    private void finalizeProjectLoading(boolean open) {
+        if (getConfig() != null) {
+            endpointStrategy.init(this);
+        }
+        if (getConfig() != null && this.environment == null) {
+            setActiveEnvironment(DefaultEnvironment.getInstance());
+        }
+
+        this.open = open && !disabled && (this.encryptionStatus != ENCRYPTED_BAD_OR_NO_PASSWORD);
+
+        addPropertyChangeListener(this);
     }
 
     @Override
