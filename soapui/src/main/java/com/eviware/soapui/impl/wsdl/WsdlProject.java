@@ -457,8 +457,7 @@ public class WsdlProject extends AbstractTestPropertyHolderWsdlModelItem<Project
      * Decode encrypted data and restore user/pass
      *
      * @param soapuiProject
-     * @return 0 - not encrypted, 1 - successfull decryption , -1 error while
-     * decrypting, bad password, no password.
+     * @return a ProjectEncryptionStatus enum
      * @throws IOException
      * @throws GeneralSecurityException
      * @author robert nemet
